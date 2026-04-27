@@ -3,7 +3,8 @@
   "version": "2.0.0",
   "private": true,
   "dependencies": {
-    "@upstash/redis": "^1.34.0"
+    "@upstash/redis": "^1.34.0",
+    "pdf-parse": "^1.1.1"
   },
   "engines": { "node": ">=18.x" }
 }
