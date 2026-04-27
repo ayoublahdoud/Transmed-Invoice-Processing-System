@@ -1,14 +1,11 @@
 {
   "version": 2,
   "functions": {
-    "api/**/*.js": {
-      "maxDuration": 60,
-      "memory": 1024
-    }
-  },
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/public/(.*)", "destination": "/public/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+    "api/process.js": { "maxDuration": 60, "memory": 1024 },
+    "api/invoices.js": { "maxDuration": 10 },
+    "api/stats.js": { "maxDuration": 10 },
+    "api/update.js": { "maxDuration": 10 },
+    "api/delete.js": { "maxDuration": 10 },
+    "api/invoice/[id].js": { "maxDuration": 10 }
+  }
 }
