@@ -1,17 +1,12 @@
 {
   "version": 2,
-  "functions": {
-    "api/process.js": { "maxDuration": 60, "memory": 1024 },
-    "api/invoices.js": { "maxDuration": 10 },
-    "api/stats.js": { "maxDuration": 10 },
-    "api/update.js": { "maxDuration": 10 },
-    "api/delete.js": { "maxDuration": 10 },
-    "api/invoice/[id].js": { "maxDuration": 10 }
-  },
-  "rewrites": [
-    {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
-    }
+  "builds": [
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "api/**/*.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/invoice/(.+)", "dest": "/api/invoice/[id]" },
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
