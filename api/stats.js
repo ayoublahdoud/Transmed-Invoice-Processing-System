@@ -28,13 +28,8 @@ export default async function handler(req, res) {
       0
     );
 
-    const aiProcessed = parsed.filter(
-      inv => inv.route === 'ocr_ia'
-    ).length;
-
-    const digitalRepo = parsed.filter(
-      inv => inv.route === 'digital_repo'
-    ).length;
+    const aiProcessed = parsed.filter(i => i.route === 'ocr_ia').length;
+    const digitalRepo = parsed.filter(i => i.route === 'digital_repo').length;
 
     return res.status(200).json({
       totalInvoices,
