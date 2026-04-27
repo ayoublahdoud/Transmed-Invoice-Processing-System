@@ -1,5 +1,4 @@
-import { Redis } from '@upstash/redis';
-
+const { Redis } = require('@upstash/redis');
 export const config = { api: { bodyParser: false, sizeLimit: '20mb' } };
 
 const redis = new Redis({
