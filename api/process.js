@@ -109,7 +109,7 @@ export default async function handler(req, res) {
 
     const timestamp = Date.now();
     const blob = await put(`invoices/${timestamp}-${file.name}`, file.buffer, {
-      access: 'public',
+      access: 'private',
       contentType: file.type
     });
 
