@@ -10,6 +10,12 @@
     { "src": "api/invoice/[id].js", "use": "@vercel/node" }
   ],
   "routes": [
+    { "src": "/api/process", "dest": "/api/process" },
+    { "src": "/api/invoices", "dest": "/api/invoices" },
+    { "src": "/api/stats", "dest": "/api/stats" },
+    { "src": "/api/update", "dest": "/api/update" },
+    { "src": "/api/delete", "dest": "/api/delete" },
+    { "src": "/api/invoice/(.*)", "dest": "/api/invoice/[id]" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
