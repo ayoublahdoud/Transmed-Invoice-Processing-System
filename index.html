@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transmed — Invoice Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{--navy:#0B1E35;--navy2:#112240;--blue:#1A4F8A;--blue2:#2563EB;--sky:#38BDF8;--teal:#0EA5E9;--green:#10B981;--amber:#F59E0B;--red:#EF4444;--surface:#FFFFFF;--surface2:#F8FAFC;--surface3:#F1F5F9;--border:#E2E8F0;--border2:#CBD5E1;--text:#0F172A;--text2:#334155;--text3:#64748B;--text4:#94A3B8;--shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);--shadow-lg:0 8px 32px rgba(0,0,0,0.12);--r:12px;--r-sm:8px;--r-lg:16px;--font:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--surface2);color:var(--text);min-height:100vh}
+header{background:var(--navy);height:60px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;border-bottom:1px solid rgba(255,255,255,0.06)}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-mark{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#1A4F8A,#38BDF8);display:flex;align-items:center;justify-content:center}
+.logo-name{color:#fff;font-size:15px;font-weight:700;letter-spacing:-0.3px}
+.logo-sub{color:#64748B;font-size:10px;font-weight:500;letter-spacing:0.8px;text-transform:uppercase}
+.status-pill{display:flex;align-items:center;gap:6px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:#10B981;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;letter-spacing:0.3px}
+.status-pill::before{content:'';width:6px;height:6px;background:#10B981;border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.4)}}
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 60px)}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto}
+.sidebar-label{font-size:10px;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:1.2px;padding:0 20px;margin-bottom:6px}
+.sidebar-section{margin-bottom:28px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text3);border-left:3px solid transparent;transition:all 0.15s}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:rgba(37,99,235,0.06);color:var(--blue2);border-left-color:var(--blue2);font-weight:600}
+.nav-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;background:var(--surface2);flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--blue2);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;font-family:var(--mono)}
+.sidebar-stats{padding:0 14px}
+.stat-mini{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 13px;margin-bottom:7px}
+.stat-mini-label{font-size:10px;font-weight:600;color:var(--text4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px}
+.stat-mini-value{font-size:20px;font-weight:800;color:var(--text);font-family:var(--mono);line-height:1}
+.stat-mini-sub{font-size:10px;color:var(--text3);margin-top:1px}
+.main{padding:28px 32px}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.page-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.5px}
+.page-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.btn-primary{background:var(--blue2);color:#fff;border:none;padding:9px 18px;border-radius:var(--r-sm);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:7px}
+.btn-primary:hover{background:#1D4ED8;transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,0.3)}
+.btn-secondary{background:var(--surface);color:var(--text2);border:1px solid var(--border2);padding:8px 14px;border-radius:var(--r-sm);font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s}
+.btn-secondary:hover{background:var(--surface2);border-color:var(--blue2);color:var(--blue2)}
+.btn-danger{background:rgba(239,68,68,0.08);color:var(--red);border:1px solid rgba(239,68,68,0.2);padding:7px 14px;border-radius:var(--r-sm);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s}
+.btn-danger:hover{background:rgba(239,68,68,0.15)}
+.upload-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);margin-bottom:24px;overflow:hidden}
+.upload-zone{padding:36px 24px;text-align:center;border:2px dashed var(--border2);margin:16px;border-radius:var(--r);background:var(--surface2);cursor:pointer;transition:all 0.2s;position:relative}
+.upload-zone.drag-over{border-color:var(--blue2);background:rgba(37,99,235,0.04)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon-wrap{width:52px;height:52px;background:linear-gradient(135deg,var(--blue),var(--teal));border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 14px}
+.upload-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:5px}
+.upload-sub{font-size:12px;color:var(--text3);margin-bottom:12px}
+.format-list{display:flex;gap:5px;justify-content:center}
+.fmt{background:var(--navy);color:#fff;font-size:9px;font-weight:700;padding:3px 7px;border-radius:3px;font-family:var(--mono);letter-spacing:0.5px}
+.upload-progress{padding:0 16px 14px;display:none}
+.progress-track{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:7px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue2),var(--sky));border-radius:2px;transition:width 0.4s ease;width:0%}
+.progress-label{font-size:11px;color:var(--text3);font-family:var(--mono);display:flex;justify-content:space-between}
+.progress-step{font-weight:500;color:var(--blue2)}
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
+.table-toolbar{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.search-input-wrap{display:flex;align-items:center;gap:7px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 10px;flex:1;max-width:240px}
+.search-input-wrap input{border:none;background:none;font-family:var(--font);font-size:12px;color:var(--text);outline:none;width:100%}
+.filter-btn{font-family:var(--font);font-size:11px;font-weight:600;padding:5px 11px;border-radius:6px;border:1px solid var(--border);background:var(--surface);cursor:pointer;color:var(--text3);transition:all 0.15s}
+.filter-btn.active,.filter-btn:hover{background:var(--blue2);color:#fff;border-color:var(--blue2)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{padding:9px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text4);background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.12s;animation:rowIn 0.3s ease both}
+@keyframes rowIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(37,99,235,0.02)}
+td{padding:11px 14px;vertical-align:middle}
+.file-cell{display:flex;align-items:center;gap:9px}
+.doc-thumb{width:34px;height:34px;border-radius:7px;border:1px solid var(--border);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--surface2);transition:all 0.15s;overflow:hidden}
+.doc-thumb:hover{border-color:var(--blue2);transform:scale(1.1)}
+.doc-thumb img,.doc-thumb canvas{width:100%;height:100%;object-fit:cover}
+.ext-badge{font-size:8px;font-weight:800;font-family:var(--mono);padding:2px 4px;border-radius:3px}
+.ext-pdf{background:#FEE2E2;color:#DC2626}.ext-img{background:#D1FAE5;color:#059669}.ext-xml{background:#EDE9FE;color:#7C3AED}
+.file-info{flex:1;min-width:0}
+.file-name{font-weight:600;color:var(--text);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.file-size{font-size:10px;color:var(--text4);font-family:var(--mono);margin-top:1px}
+.route-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:12px}
+.route-ai{background:rgba(56,189,248,0.1);color:#0284C7}.route-repo{background:rgba(124,58,237,0.1);color:#7C3AED}
+.status-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600}
+.status-badge::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.st-validated::before{background:var(--green)}.st-validated{color:#059669}
+.amount-val{font-family:var(--mono);font-weight:700;color:var(--text);font-size:12px}
+.time-val{font-family:var(--mono);font-size:10px;color:var(--text4)}
+.row-actions{display:flex;align-items:center;gap:5px}
+.action-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all 0.15s}
+.action-btn:hover{border-color:var(--blue2);background:rgba(37,99,235,0.06)}
+.action-btn.del:hover{border-color:var(--red);background:rgba(239,68,68,0.06)}
+.empty-state{padding:56px 24px;text-align:center}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:0.3}
+.empty-title{font-size:14px;font-weight:700;color:var(--text);opacity:0.5;margin-bottom:3px}
+.empty-sub{font-size:12px;color:var(--text4)}
+.overlay{position:fixed;inset:0;background:rgba(11,30,53,0.55);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:20px}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow-lg);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;animation:modalIn 0.22s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(0.96)translateY(8px)}to{opacity:1;transform:scale(1)translateY(0)}}
+.modal-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:2}
+.modal-title{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-0.3px}
+.modal-subtitle{font-size:11px;color:var(--text3);margin-top:1px}
+.modal-close{background:none;border:none;font-size:16px;cursor:pointer;color:var(--text4);width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:var(--surface2);color:var(--text)}
+.modal-body{padding:18px 22px 22px}
+.modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;background:var(--surface2);border-radius:0 0 var(--r-lg) var(--r-lg)}
+.val-section{margin-bottom:18px}
+.val-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text4);margin-bottom:9px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-field{display:flex;flex-direction:column;gap:3px}
+.form-field.full{grid-column:1/-1}
+.form-label{font-size:10px;font-weight:600;color:var(--text3)}
+.form-input{padding:7px 9px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:var(--font);font-size:12px;color:var(--text);background:var(--surface);transition:border-color 0.15s}
+.form-input:focus{outline:none;border-color:var(--blue2);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+.form-input.hl{border-color:var(--blue2);background:rgba(37,99,235,0.02);font-weight:600}
+.confidence-row{display:flex;align-items:center;gap:10px;padding:9px 11px;background:var(--surface2);border-radius:var(--r-sm);border:1px solid var(--border);margin-bottom:14px}
+.conf-label{font-size:10px;font-weight:600;color:var(--text3)}
+.conf-bar{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.conf-fill{height:100%;border-radius:3px;transition:width 0.5s}
+.conf-pct{font-size:11px;font-weight:700;font-family:var(--mono)}
+.lines-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.lines-tbl th{background:var(--surface2);padding:6px 8px;text-align:left;font-weight:600;color:var(--text3);border-bottom:1px solid var(--border);font-size:9px;text-transform:uppercase;letter-spacing:0.5px}
+.lines-tbl td{padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text)}
+.lines-tbl tr:last-child td{border-bottom:none}
+.lines-tbl .num{text-align:right;font-family:var(--mono)}
+.doc-viewer-content{background:#1a1a1a;border-radius:var(--r-sm);overflow:hidden;min-height:360px;display:flex;align-items:center;justify-content:center}
+.doc-viewer-content img,.doc-viewer-content canvas{max-width:100%;max-height:68vh;object-fit:contain}
+.toast-wrap{position:fixed;bottom:22px;right:22px;display:flex;flex-direction:column;gap:7px;z-index:9999}
+.toast{background:var(--navy2);color:#fff;padding:9px 14px;border-radius:var(--r-sm);font-size:12px;font-weight:500;display:flex;align-items:center;gap:7px;box-shadow:var(--shadow-lg);animation:toastIn 0.22s ease;max-width:300px;border-left:3px solid var(--green)}
+.toast.warn{border-left-color:var(--amber)}.toast.error{border-left-color:var(--red)}
+@keyframes toastIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{display:none}.main{padding:16px}.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-mark">
+      <svg width="18" height="18" viewBox="0 0 22 22" fill="none"><path d="M11 2L3 7V15L11 20L19 15V7L11 2Z" stroke="white" stroke-width="1.5"/><path d="M7 11H15M11 7V15" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </div>
+    <div><div class="logo-name">TRANSMED</div><div class="logo-sub">Invoice Management System</div></div>
+  </div>
+  <div class="status-pill">SYSTEM ACTIVE</div>
+</header>
+
+<div class="layout">
+<aside class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Navigation</div>
+    <div class="nav-item active"><div class="nav-icon">📋</div><span>Invoice Repository</span><span class="nav-badge" id="navTotal">0</span></div>
+    <div class="nav-item" onclick="openUploadSection()"><div class="nav-icon">⬆️</div><span>Upload Documents</span></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Overview</div>
+    <div class="sidebar-stats">
+      <div class="stat-mini"><div class="stat-mini-label">Total Processed</div><div class="stat-mini-value" id="sbTotal">0</div><div class="stat-mini-sub">All time</div></div>
+      <div class="stat-mini"><div class="stat-mini-label">Total Amount</div><div class="stat-mini-value" id="sbAmount" style="font-size:14px">—</div><div class="stat-mini-sub">MAD extracted by AI</div></div>
+      <div class="stat-mini"><div class="stat-mini-label">Unique Suppliers</div><div class="stat-mini-value" id="sbSuppliers">0</div><div class="stat-mini-sub">Vendors on record</div></div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div><div class="page-title">Invoice Repository</div><div class="page-sub">Manage and review all processed invoices</div></div>
+    <button class="btn-primary" onclick="openUploadSection()">+ Upload Invoice</button>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="upload-card" id="uploadCard" style="display:none">
+    <div style="padding:14px 18px 0;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:13px;font-weight:700;color:var(--text)">Upload New Invoice</span>
+      <button class="btn-secondary" onclick="closeUploadSection()">✕ Close</button>
+    </div>
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png,.xml" onchange="handleFiles(this.files)">
+      <div class="upload-icon-wrap">📄</div>
+      <div class="upload-title">Drop your invoice here</div>
+      <div class="upload-sub">AI extracts all data automatically — PDF, image or XML</div>
+      <div class="format-list"><span class="fmt">PDF</span><span class="fmt">JPEG</span><span class="fmt">PNG</span><span class="fmt">XML</span></div>
+    </div>
+    <div class="upload-progress" id="uploadProgress">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label"><span class="progress-step" id="progressStep">Preparing...</span><span id="progressPct">0%</span></div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-card">
+    <div class="table-toolbar">
+      <div class="search-input-wrap">🔍<input type="text" placeholder="Search invoices..." id="searchInput" oninput="filterTable()"></div>
+      <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('ocr_ia',this)">AI Processed</button>
+      <button class="filter-btn" onclick="setFilter('digital_repo',this)">Digital Repo</button>
+      <button class="btn-secondary" onclick="loadInvoices()" style="margin-left:auto">↻ Refresh</button>
+    </div>
+    <div id="tableContainer"><div class="empty-state"><div class="empty-icon">📁</div><div class="empty-title">No invoices yet</div><div class="empty-sub">Upload your first invoice to get started</div></div></div>
+  </div>
+</main>
+</div>
+
+<!-- VALIDATION MODAL -->
+<div class="overlay" id="validationModal">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <div><div class="modal-title">Review Extracted Data</div><div class="modal-subtitle">Verify and correct before saving to repository</div></div>
+      <button class="modal-close" onclick="closeValidation()">✕</button>
+    </div>
+    <div class="modal-body" id="validationBody"></div>
+    <div class="modal-footer">
+      <button class="btn-danger" onclick="closeValidation()">Discard</button>
+      <button class="btn-primary" onclick="saveInvoice()" id="confirmBtn">✓ Confirm & Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEWER MODAL -->
+<div class="overlay" id="viewerModal" onclick="closeViewerClick(event)">
+  <div class="modal" style="max-width:860px">
+    <div class="modal-header"><div class="modal-title" id="viewerTitle">Document</div><button class="modal-close" onclick="document.getElementById('viewerModal').classList.remove('open')">✕</button></div>
+    <div class="modal-body" style="padding:14px"><div class="doc-viewer-content" id="viewerContent"></div></div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Edit Invoice</div><button class="modal-close" onclick="document.getElementById('editModal').classList.remove('open')">✕</button></div>
+    <div class="modal-body" id="editBody"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="document.getElementById('editModal').classList.remove('open')">Cancel</button>
+      <button class="btn-primary" onclick="submitEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="overlay" id="deleteModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><div class="modal-title">Delete Invoice</div><button class="modal-close" onclick="document.getElementById('deleteModal').classList.remove('open')">✕</button></div>
+    <div class="modal-body"><p style="font-size:13px;color:var(--text2);line-height:1.6">Are you sure you want to permanently delete <strong id="deleteFileName"></strong>? This cannot be undone.</p></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="document.getElementById('deleteModal').classList.remove('open')">Cancel</button>
+      <button class="btn-danger" onclick="confirmDelete()" style="padding:8px 16px;font-size:13px">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+if(typeof pdfjsLib!=='undefined'){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
+const state={invoices:[],filter:'all',search:'',pendingInvoice:null,pendingFileData:null,editingId:null,deleteId:null};
+
+function openUploadSection(){const el=document.getElementById('uploadCard');el.style.display='block';el.scrollIntoView({behavior:'smooth'});}
+function closeUploadSection(){document.getElementById('uploadCard').style.display='none';}
+
+const zone=document.getElementById('uploadZone');
+zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag-over');});
+zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
+zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');handleFiles(e.dataTransfer.files);});
+
+async function handleFiles(files){
+  if(!files?.length)return;
+  document.getElementById('fileInput').value='';
+  const file=files[0];
+  const ext=file.name.split('.').pop().toLowerCase();
+  showProgress(5,'Reading document...');
+  try{
+    let processFile=file,originalName=file.name,fileDataUrl=null;
+    if(ext==='pdf'){
+      showProgress(20,'Converting PDF to image...');
+      const result=await convertPdfToImage(file);
+      if(!result){toast('Could not process this PDF. Please try as JPG.','error');hideProgress();return;}
+      processFile=result.file;fileDataUrl=result.dataUrl;
+    }else{
+      fileDataUrl=await fileToDataUrl(file);
+    }
+    showProgress(50,'Analyzing document with AI...');
+    state.pendingFileData=fileDataUrl;
+    const formData=new FormData();
+    formData.append('file',processFile);
+    formData.append('originalName',originalName);
+    showProgress(75,'Extracting invoice data...');
+    const res=await fetch('/api/process',{method:'POST',body:formData});
+    const data=await res.json();
+    if(res.status===409){toast('Duplicate — this invoice is already in the repository','warn');hideProgress();return;}
+    if(!res.ok){toast(data.error||'Processing failed','error');hideProgress();return;}
+    showProgress(98,'Ready for review...');
+    await sleep(300);hideProgress();
+    state.pendingInvoice=data.invoice;
+    openValidationModal(data.invoice,fileDataUrl);
+  }catch(err){toast('Error: '+err.message,'error');hideProgress();}
+}
+
+async function convertPdfToImage(pdfFile){
+  return new Promise(resolve=>{
+    const reader=new FileReader();
+    reader.onload=async e=>{
+      try{
+        pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        const pdf=await pdfjsLib.getDocument({data:e.target.result}).promise;
+        const page=await pdf.getPage(1);
+        const viewport=page.getViewport({scale:2.5});
+        const canvas=document.createElement('canvas');
+        canvas.width=viewport.width;canvas.height=viewport.height;
+        await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+        const dataUrl=canvas.toDataURL('image/jpeg',0.92);
+        const blob=await new Promise(r=>canvas.toBlob(r,'image/jpeg',0.92));
+        const imgFile=new File([blob],pdfFile.name.replace(/\.pdf$/i,'.jpg'),{type:'image/jpeg'});
+        resolve({file:imgFile,dataUrl});
+      }catch(err){console.error(err);resolve(null);}
+    };
+    reader.readAsArrayBuffer(pdfFile);
+  });
+}
+
+async function fileToDataUrl(file){return new Promise(resolve=>{const r=new FileReader();r.onload=e=>resolve(e.target.result);r.readAsDataURL(file);});}
+function showProgress(pct,step){document.getElementById('uploadProgress').style.display='block';document.getElementById('progressFill').style.width=pct+'%';document.getElementById('progressStep').textContent=step;document.getElementById('progressPct').textContent=pct+'%';}
+function hideProgress(){document.getElementById('uploadProgress').style.display='none';document.getElementById('progressFill').style.width='0%';}
+
+function openValidationModal(invoice,fileDataUrl){
+  const e=invoice.extracted||{};
+  const conf=Math.round((e.confiance||0)*100);
+  const cc=conf>80?'#10B981':conf>50?'#F59E0B':'#EF4444';
+  const lines=(e.lignes||[]).map(l=>`<tr><td>${l.description||'—'}</td><td class="num">${l.quantite||1}</td><td class="num">${fmt(l.prix_unitaire)}</td><td class="num">${fmt(l.montant)}</td></tr>`).join('');
+  const storedData=fileDataUrl?`data-src="${fileDataUrl}"`:'';
+  document.getElementById('validationBody').innerHTML=`
+    <div class="confidence-row">
+      <span class="conf-label">AI Confidence</span>
+      <div class="conf-bar"><div class="conf-fill" style="width:${conf}%;background:${cc}"></div></div>
+      <span class="conf-pct" style="color:${cc}">${conf}%</span>
+      ${fileDataUrl?`<button class="btn-secondary" onclick="openViewerDirect('${invoice.filename||'Invoice'}','${fileDataUrl.substring(0,60)}')" style="padding:3px 9px;font-size:11px;margin-left:6px">🔍 Preview</button>`:''}
+    </div>
+    <div class="val-section">
+      <div class="val-section-title">Invoice Details</div>
+      <div class="form-grid">
+        <div class="form-field"><div class="form-label">Invoice Number</div><input class="form-input hl" id="v_numero" value="${e.numero_facture||''}"></div>
+        <div class="form-field"><div class="form-label">Invoice Date</div><input class="form-input" type="date" id="v_date" value="${e.date_facture||''}"></div>
+        <div class="form-field"><div class="form-label">Due Date</div><input class="form-input" type="date" id="v_echeance" value="${e.date_echeance||''}"></div>
+        <div class="form-field"><div class="form-label">Payment Terms</div><input class="form-input" id="v_paiement" value="${e.mode_paiement||''}"></div>
+      </div>
+    </div>
+    <div class="val-section">
+      <div class="val-section-title">Supplier</div>
+      <div class="form-grid">
+        <div class="form-field"><div class="form-label">Company Name</div><input class="form-input hl" id="v_supplier" value="${e.fournisseur?.nom||''}"></div>
+        <div class="form-field"><div class="form-label">ICE Number</div><input class="form-input" id="v_ice" value="${e.fournisseur?.ice||''}"></div>
+        <div class="form-field full"><div class="form-label">Address</div><input class="form-input" id="v_address" value="${e.fournisseur?.adresse||''}"></div>
+      </div>
+    </div>
+    <div class="val-section">
+      <div class="val-section-title">Financials (MAD)</div>
+      <div class="form-grid">
+        <div class="form-field"><div class="form-label">Subtotal HT</div><input class="form-input" type="number" id="v_ht" value="${e.sous_total||0}"></div>
+        <div class="form-field"><div class="form-label">VAT Rate (%)</div><input class="form-input" type="number" id="v_tva_rate" value="${e.tva_taux||20}"></div>
+        <div class="form-field"><div class="form-label">VAT Amount</div><input class="form-input" type="number" id="v_tva" value="${e.tva_montant||0}"></div>
+        <div class="form-field"><div class="form-label">Total TTC</div><input class="form-input hl" type="number" id="v_ttc" value="${e.total_ttc||0}"></div>
+      </div>
+    </div>
+    ${lines?`<div class="val-section"><div class="val-section-title">Line Items</div><table class="lines-tbl"><thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead><tbody>${lines}</tbody></table></div>`:''}
+  `;
+  document.getElementById('validationModal').classList.add('open');
+}
+
+function closeValidation(){document.getElementById('validationModal').classList.remove('open');state.pendingInvoice=null;state.pendingFileData=null;}
+
+async function saveInvoice(){
+  if(!state.pendingInvoice)return;
+  const updates={
+    numero_facture:document.getElementById('v_numero')?.value||null,
+    date_facture:document.getElementById('v_date')?.value||null,
+    date_echeance:document.getElementById('v_echeance')?.value||null,
+    mode_paiement:document.getElementById('v_paiement')?.value||null,
+    sous_total:parseFloat(document.getElementById('v_ht')?.value)||0,
+    tva_taux:parseFloat(document.getElementById('v_tva_rate')?.value)||20,
+    tva_montant:parseFloat(document.getElementById('v_tva')?.value)||0,
+    total_ttc:parseFloat(document.getElementById('v_ttc')?.value)||0,
+    fournisseur:{...state.pendingInvoice.extracted?.fournisseur,nom:document.getElementById('v_supplier')?.value||'',ice:document.getElementById('v_ice')?.value||null,adresse:document.getElementById('v_address')?.value||null}
+  };
+  const btn=document.getElementById('confirmBtn');btn.textContent='Saving...';btn.disabled=true;
+  try{
+    const res=await fetch(`/api/update?id=${state.pendingInvoice.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(updates)});
+    if(!res.ok)throw new Error('Update failed');
+    closeValidation();toast('✓ Invoice saved to repository');
+    await loadInvoices();await loadStats();
+  }catch(err){toast('Save failed: '+err.message,'error');btn.textContent='✓ Confirm & Save';btn.disabled=false;}
+}
+
+function openViewerDirect(filename,dataUrlStart){
+  const inv=state.invoices.find(i=>i.filename===filename);
+  openViewer(filename,state.pendingFileData||null);
+}
+
+function openViewer(filename,dataUrl){
+  document.getElementById('viewerTitle').textContent=filename||'Document';
+  const content=document.getElementById('viewerContent');
+  if(dataUrl&&dataUrl.startsWith('data:image')){content.innerHTML=`<img src="${dataUrl}" alt="Invoice">`;}
+  else{content.innerHTML=`<div style="color:#888;padding:48px;text-align:center"><div style="font-size:40px;margin-bottom:14px">📄</div><div style="font-size:14px;color:#aaa">${filename}</div><div style="font-size:12px;margin-top:8px;color:#666">Document stored securely in repository</div></div>`;}
+  document.getElementById('viewerModal').classList.add('open');
+}
+
+function closeViewerClick(e){if(e.target===document.getElementById('viewerModal'))document.getElementById('viewerModal').classList.remove('open');}
+
+async function loadInvoices(){
+  try{
+    const res=await fetch('/api/invoices');const data=await res.json();
+    state.invoices=data.invoices||[];renderTable();
+    document.getElementById('navTotal').textContent=state.invoices.length;
+  }catch{}
+}
+
+async function loadStats(){
+  try{
+    const res=await fetch('/api/stats');const s=await res.json();
+    document.getElementById('sbTotal').textContent=s.total??0;
+    document.getElementById('sbAmount').textContent=s.montant_total?(s.montant_total.toLocaleString('fr-MA')+' MAD'):'—';
+    document.getElementById('sbSuppliers').textContent=s.fournisseurs??0;
+  }catch{}
+}
+
+function filterTable(){state.search=document.getElementById('searchInput').value.toLowerCase();renderTable();}
+function setFilter(f,btn){state.filter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTable();}
+
+function renderTable(){
+  let data=state.invoices;
+  if(state.filter!=='all')data=data.filter(i=>i.route===state.filter);
+  if(state.search)data=data.filter(i=>i.filename?.toLowerCase().includes(state.search)||i.extracted?.fournisseur?.nom?.toLowerCase().includes(state.search)||i.extracted?.numero_facture?.toLowerCase().includes(state.search));
+  const container=document.getElementById('tableContainer');
+  if(!data.length){container.innerHTML=`<div class="empty-state"><div class="empty-icon">📁</div><div class="empty-title">${state.search?'No results':'No invoices yet'}</div><div class="empty-sub">${state.search?'Try a different search term':'Upload your first invoice to get started'}</div></div>`;return;}
+  const rows=data.map((inv,idx)=>{
+    const e=inv.extracted||{};
+    const ext=(inv.filename?.split('.').pop().toLowerCase()||'');
+    const isPdf=ext==='pdf';const isImg=['jpg','jpeg','png'].includes(ext);
+    const extClass=isPdf?'ext-pdf':isImg?'ext-img':'ext-xml';
+    const extLabel=ext.toUpperCase()||'FILE';
+    const route=inv.route==='ocr_ia'?`<span class="route-badge route-ai">AI Processed</span>`:`<span class="route-badge route-repo">Digital Repo</span>`;
+    const amount=e.total_ttc?`<span class="amount-val">${Number(e.total_ttc).toLocaleString('fr-MA')} MAD</span>`:`<span style="color:var(--text4)">—</span>`;
+    const time=inv.processedAt?new Date(inv.processedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'—';
+    const safeFilename=inv.filename?.replace(/'/g,"\\'").replace(/"/g,'&quot;')||'';
+    return `<tr style="animation-delay:${idx*0.04}s">
+      <td><div class="file-cell">
+        <div class="doc-thumb" onclick="openViewer('${safeFilename}',null)" title="View document"><span class="ext-badge ${extClass}">${extLabel}</span></div>
+        <div class="file-info"><div class="file-name" title="${inv.filename}">${inv.filename}</div><div class="file-size">${inv.size?(inv.size/1024).toFixed(1)+' KB':''}</div></div>
+      </div></td>
+      <td style="font-size:12px;font-weight:500;color:var(--text)">${e.fournisseur?.nom||'—'}</td>
+      <td>${amount}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${e.numero_facture||'—'}</td>
+      <td>${route}</td>
+      <td><span class="status-badge st-validated">Validated</span></td>
+      <td class="time-val">${time}</td>
+      <td><div class="row-actions">
+        <button class="action-btn" onclick="openEdit('${inv.id}')" title="Edit">✏️</button>
+        <button class="action-btn del" onclick="openDelete('${inv.id}','${safeFilename}')" title="Delete">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  container.innerHTML=`<table><thead><tr><th>Document</th><th>Supplier</th><th>Amount</th><th>Reference</th><th>Type</th><th>Status</th><th>Processed</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+async function openEdit(id){
+  const inv=state.invoices.find(i=>i.id===id);if(!inv)return;
+  const e=inv.extracted||{};state.editingId=id;
+  document.getElementById('editBody').innerHTML=`<div class="form-grid">
+    <div class="form-field"><div class="form-label">Invoice Number</div><input class="form-input" id="e_numero" value="${e.numero_facture||''}"></div>
+    <div class="form-field"><div class="form-label">Supplier</div><input class="form-input" id="e_supplier" value="${e.fournisseur?.nom||''}"></div>
+    <div class="form-field"><div class="form-label">Invoice Date</div><input class="form-input" type="date" id="e_date" value="${e.date_facture||''}"></div>
+    <div class="form-field"><div class="form-label">Due Date</div><input class="form-input" type="date" id="e_echeance" value="${e.date_echeance||''}"></div>
+    <div class="form-field"><div class="form-label">Total TTC (MAD)</div><input class="form-input" type="number" id="e_ttc" value="${e.total_ttc||0}"></div>
+    <div class="form-field"><div class="form-label">VAT Amount</div><input class="form-input" type="number" id="e_tva" value="${e.tva_montant||0}"></div>
+    <div class="form-field full"><div class="form-label">Notes</div><input class="form-input" id="e_notes" value="${e.notes||''}"></div>
+  </div>`;
+  document.getElementById('editModal').classList.add('open');
+}
+
+async function submitEdit(){
+  if(!state.editingId)return;
+  const updates={numero_facture:document.getElementById('e_numero')?.value,date_facture:document.getElementById('e_date')?.value,date_echeance:document.getElementById('e_echeance')?.value,total_ttc:parseFloat(document.getElementById('e_ttc')?.value)||0,tva_montant:parseFloat(document.getElementById('e_tva')?.value)||0,notes:document.getElementById('e_notes')?.value,fournisseur:{nom:document.getElementById('e_supplier')?.value||''}};
+  try{
+    const res=await fetch(`/api/update?id=${state.editingId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(updates)});
+    if(!res.ok)throw new Error();
+    document.getElementById('editModal').classList.remove('open');toast('✓ Invoice updated');await loadInvoices();
+  }catch{toast('Update failed','error');}
+}
+
+function openDelete(id,filename){state.deleteId=id;document.getElementById('deleteFileName').textContent=filename;document.getElementById('deleteModal').classList.add('open');}
+async function confirmDelete(){
+  if(!state.deleteId)return;
+  try{
+    const res=await fetch(`/api/delete?id=${state.deleteId}`,{method:'DELETE'});
+    if(!res.ok)throw new Error();
+    document.getElementById('deleteModal').classList.remove('open');state.deleteId=null;toast('Invoice deleted');await loadInvoices();await loadStats();
+  }catch{toast('Delete failed','error');}
+}
+
+function fmt(n){if(!n)return'—';return Number(n).toLocaleString('fr-MA',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function toast(msg,type=''){const t=Object.assign(document.createElement('div'),{className:`toast ${type}`,textContent:msg});document.getElementById('toastWrap').appendChild(t);setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),200);},4000);}
+
+loadInvoices();loadStats();setInterval(()=>{loadStats();},30000);
+</script>
+</body>
+</html>
