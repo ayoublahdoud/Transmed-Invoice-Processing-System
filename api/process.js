@@ -50,7 +50,7 @@ async function parseMultipart(req) {
 
 async function analyzeInvoice(fileBuffer, filename) {
   const ext = filename.split('.').pop().toLowerCase();
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const prompt = `Tu es un expert en extraction de données de factures pour Transmed (pharmacie, Maroc).
 Analyse cette facture et réponds UNIQUEMENT en JSON valide, sans texte avant ou après.
