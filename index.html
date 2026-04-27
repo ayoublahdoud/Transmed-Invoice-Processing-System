@@ -173,7 +173,7 @@ td{padding:11px 14px;vertical-align:middle}
       <button class="btn-secondary" onclick="closeUploadSection()">✕ Close</button>
     </div>
     <div class="upload-zone" id="uploadZone">
-      <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png,.xml" onchange="handleFiles(this.files)">
+      <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png,.xml" id="fileInput">
       <div class="upload-icon-wrap">📄</div>
       <div class="upload-title">Drop your invoice here</div>
       <div class="upload-sub">AI extracts all data automatically — PDF, image or XML</div>
@@ -252,7 +252,7 @@ td{padding:11px 14px;vertical-align:middle}
 if(typeof pdfjsLib!=='undefined'){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
 const state={invoices:[],filter:'all',search:'',pendingInvoice:null,pendingFileData:null,editingId:null,deleteId:null};
 
-function openUploadSection(){const el=document.getElementById('uploadCard');el.style.display='block';el.scrollIntoView({behavior:'smooth'});}
+function openUploadSection(){const el=document.getElementById('uploadCard');el.style.display='block';el.scrollIntoView({behavior:'smooth'});setTimeout(setupFileInput,50);}
 function closeUploadSection(){document.getElementById('uploadCard').style.display='none';}
 
 const zone=document.getElementById('uploadZone');
@@ -261,7 +261,8 @@ zone.addEventListener('dragleave',()=>zone.classList.remove('drag-over'));
 zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag-over');handleFiles(e.dataTransfer.files);});
 
 async function handleFiles(files){
-  if(!files?.length)return;
+  if(!files||!files.length||!files[0])return;
+  const file=files[0];if(!file||!file.name)return;
   document.getElementById('fileInput').value='';
   const file=files[0];
   const ext=file.name.split('.').pop().toLowerCase();
@@ -496,6 +497,25 @@ async function confirmDelete(){
 function fmt(n){if(!n)return'—';return Number(n).toLocaleString('fr-MA',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function toast(msg,type=''){const t=Object.assign(document.createElement('div'),{className:`toast ${type}`,textContent:msg});document.getElementById('toastWrap').appendChild(t);setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),200);},4000);}
+
+
+// ROBUST FILE INPUT HANDLER
+document.addEventListener('DOMContentLoaded', function() {
+  setupFileInput();
+});
+function setupFileInput() {
+  const inp = document.getElementById('fileInput');
+  if (!inp) return;
+  inp.removeEventListener('change', onFileChange);
+  inp.addEventListener('change', onFileChange);
+}
+function onFileChange(e) {
+  const files = e.target.files;
+  if (files && files.length > 0) {
+    handleFiles(files);
+  }
+  e.target.value = '';
+}
 
 loadInvoices();loadStats();setInterval(()=>{loadStats();},30000);
 </script>
