@@ -7,7 +7,7 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN,
 });
 
-const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
+const CF_ACCOUNT_ID = '3333c231028398c09b813c838d1de823';
 const CF_API_TOKEN  = process.env.CF_API_TOKEN;
 
 async function sha256(buffer) {
