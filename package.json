@@ -4,12 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "echo build done"
+    "build": "mkdir -p .vercel/output/static && cp index.html .vercel/output/static/index.html"
   },
   "dependencies": {
     "@upstash/redis": "^1.34.0"
-  },
-  "engines": {
-    "node": ">=18.x"
   }
 }
